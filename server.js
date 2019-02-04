@@ -16,6 +16,8 @@ nextApp.prepare()
     const passport = require('koa-passport');
     const router = require('./routes');
     const db = require('./models');
+    // authentication
+    require('./utils/auth');
 
     server
           .use(logger())
@@ -25,6 +27,7 @@ nextApp.prepare()
           .use(koaValidator())
           .use(passport.initialize())
           .use(passport.session())
+          .use(passport.authenticate('remember-me'))
           .use(router.routes())
           .use(router.allowedMethods());
 
