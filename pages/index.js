@@ -29,6 +29,9 @@ const PostLink = ({ post: show }) => (
 const Index = props => (
   <Layout>
     <h1>Batman TV Shows</h1>
+    <Link as="/login" href="/login?test=1&d='fdf'">
+      <a>login page</a>
+    </Link>
     <ul>
       {props.shows.map(({ show }) => (
         <PostLink key={show.id} post={show} />

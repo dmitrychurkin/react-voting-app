@@ -4,16 +4,13 @@ const bcrypt = require('bcrypt-nodejs');
 const { app, handle } = require('../next.app');
 
 const koaRouter = new Router;
-koaRouter.get('/home', async ctx => {
-  await app.render(ctx.req, ctx.res, '/home', ctx.query);
-  ctx.respond = false;
-});
 
-koaRouter.get('/login', async ctx => {
-  await app.render(ctx.req, ctx.res, '/login', ctx.query);
+koaRouter.get('*', async ctx => {
+  console.log(ctx.path);
+  await handle(ctx.req, ctx.res);
   ctx.respond = false;
 })
-.post('/login', async (ctx, next) => {
+.post('/login', async ctx => {
   return passport.authenticate('local', (err, user) => {
     if (user === false) {
       ctx.body = { success: false };
@@ -23,20 +20,10 @@ koaRouter.get('/login', async ctx => {
       return ctx.login(user);
     }
   })(ctx);
-  await next();
-});
-
-koaRouter.get('/sign-in', async ctx => {
-  await app.render(ctx.req, ctx.res, '/sign-in', ctx.query);
-  ctx.respond = false;
+  
 })
 .post('/sign-in', async ctx => {
   await app.render(ctx.req, ctx.res, '/sign-in', ctx.query);
-  ctx.respond = false;
-});
-
-koaRouter.get('*', async ctx => {
-  await handle(ctx.req, ctx.res);
   ctx.respond = false;
 });
 

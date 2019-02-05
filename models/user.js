@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       unique: 'compositeIndex'
     },
     password: DataTypes.STRING,
-    uuid: DataTypes.UUIDV4,
+    uuid: DataTypes.UUID,
     remember_token: DataTypes.STRING
   }, {});
   User.associate = function(models) {

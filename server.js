@@ -17,7 +17,7 @@ nextApp.prepare()
     const router = require('./routes');
     const db = require('./models');
     // authentication
-    require('./utils/auth');
+    require('./util/auth');
 
     server
           .use(logger())

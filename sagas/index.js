@@ -1,12 +1,15 @@
 import { all } from 'redux-saga/effects';
-import { watchFetchApod } from './app.sagas';
+import formActionSaga from 'redux-form-saga';
+import { loginWatcherSaga } from './app.sagas';
+
 
 export default function* rootSaga() {
   try {
     yield all([
-      watchFetchApod(),
+      loginWatcherSaga(),
+      formActionSaga()
     ]);
   } catch (err) {
-    console.log(err);
+    console.log('Error occured in rootSaga', err);
   }
 }

@@ -1,15 +1,18 @@
-import { createActions, handleActions } from 'redux-actions';
+import { handleActions, combineActions } from 'redux-actions';
+import { combineReducers } from 'redux';
+import { reducer as formReducer } from 'redux-form';
+import { login, signIn } from '../actions';
 
-const defaultState = { userLogged: false, error: null, loginStart: true };
+const defaultState = { userLogged: false, error: null, requestSent: false };
 
-export const { loginStart, loginSuccess, loginFail } = createActions({
-  LOGIN_START: () => ({ start: true }),
-  LOGIN_SUCCESS: result => ({ result }),
-  LOGIN_FAIL: error => ({ error })
-}); 
 
-export const reducer = handleActions({
-  [loginStart]: state => ({...state, loginStart: true}),
-  [loginSuccess]: state => ({ ...state, userLogged: true, loginStart: false }),
-  [loginFail]: (state, { payload: { error } }) => ({ ...state, error, loginStart: false })
+const appReducer = handleActions({
+  [combineActions(login.REQUEST, signIn.REQUEST)]: state => ({ ...state, requestSent: true }),
+  [login.SUCCESS]: state => ({ ...state, userLogged: true, requestSent: false }),
+  [login.FAILURE]: (state, { payload: { error } }) => ({ ...state, error, requestSent: false })
+}, defaultState);
+
+export default combineReducers({
+  app: appReducer,
+  form: formReducer
 });
