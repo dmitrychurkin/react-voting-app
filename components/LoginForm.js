@@ -47,11 +47,13 @@ const renderCheckbox = ({ label }) => (
 
 const MaterialLoginForm = props => {
   const { handleSubmit, pristine, submitting, error, valid } = props;
+  
   const submit = handleSubmit(login);
   return (
     <form onSubmit={submit}>
       <div>
         <Field 
+          style={{ width: `${100}%` }}
           type="email"
           name="email"
           component={renderTextField}
@@ -60,6 +62,7 @@ const MaterialLoginForm = props => {
       </div>
       <div>
         <Field 
+            style={{ width: `${100}%` }}
             type="password"
             name="password"
             component={renderTextField}
@@ -72,7 +75,7 @@ const MaterialLoginForm = props => {
       {error && <strong>{error}</strong>}
       <div>
         <Button type="submit" variant="contained" color="primary" disabled={pristine || submitting || !valid}>
-          Submit
+          Login
         </Button>
       </div>
     </form>

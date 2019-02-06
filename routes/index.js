@@ -6,7 +6,6 @@ const { app, handle } = require('../next.app');
 const koaRouter = new Router;
 
 koaRouter.get('*', async ctx => {
-  console.log(ctx.path);
   await handle(ctx.req, ctx.res);
   ctx.respond = false;
 })

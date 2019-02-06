@@ -5,7 +5,7 @@ import flush from 'styled-jsx/server';
 class CustomDocument extends Document {
   render() {
     const { pageContext } = this.props;
-    console.log('pageContext ', pageContext);
+    //console.log('pageContext ', pageContext);
 
     return (
       <html lang="en" dir="ltr">
@@ -19,7 +19,7 @@ class CustomDocument extends Document {
           {/* PWA primary color */}
           <meta
             name="theme-color"
-            content={null}
+            content={pageContext ? pageContext.theme.palette.primary.main : null}
           />
           <link
             rel="stylesheet"
