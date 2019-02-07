@@ -45,6 +45,7 @@
     "redux-form-saga": "^0.2.0",
     "redux-saga": "^1.0.1",
     "sequelize": "^4.42.0",
-    "styled-jsx": "^3.2.0"
+    "styled-jsx": "^3.2.0",
+    "uuid": "^3.3.2"
   }
 }

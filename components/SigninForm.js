@@ -1,42 +1,54 @@
 import { reduxForm, Field } from 'redux-form';
 import { TextField, Button } from '@material-ui/core';
-import { login } from '../actions';
+import { signIn } from '../actions';
 
-const fieldNames = {
-  EMAIL: 'email',
-  PASSWORD: 'password',
-  CONFIRM: 'confirmPassword',
-  FIRST_NAME: 'firstName',
-  LAST_NAME: 'lastName'
-};
 
-const validate = (...args) => {
-  console.log(args);
-  const values = args[0];
+const validate = values => {
+
   const errors = {};
 
-  Object.keys(fieldNames).forEach(field => {
-    if (!values[fieldNames[field]]) {
-      errors[fieldNames[field]] = 'This field required';
+  const requiredFields = [
+    'firstName',
+    'email',
+    'password',
+    'confirmPassword'
+  ];
+
+  requiredFields.forEach(field => {
+    if (!values[field]) {
+      errors[field] = 'This field required';
     }
   });
 
-  const lengthErrorMessage = 'Name must have atleast 3 characters';
+  const minLengthErrorMessage = 'Name must have atleast 3 characters';
+  const maxLengthErrorMessage = 'Name must have maximum 100 characters';
 
-  if (values[fieldNames.FIRST_NAME] && values[fieldNames.FIRST_NAME].length < 3) {
-    errors[fieldNames.FIRST_NAME] = lengthErrorMessage
+  if (values.firstName && values.firstName.length < 3) {
+    errors.firstName = minLengthErrorMessage;
   }
 
-  if (values[fieldNames.LAST_NAME] && values[fieldNames.LAST_NAME].length < 3) {
-    errors[fieldNames.LAST_NAME] = lengthErrorMessage;
+  if (values.firstName && values.firstName.length > 100) {
+    errors.firstName = maxLengthErrorMessage;
   }
 
-  if (values[fieldNames.EMAIL] && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values[fieldNames.EMAIL])) {
-    errors[fieldNames.EMAIL] = 'Invalid email address';
+  if (values.lastName && values.lastName.length > 100) {
+    errors.lastName = maxLengthErrorMessage;
   }
 
-  if (values[fieldNames.PASSWORD] !== values[fieldNames.CONFIRM]) {
-    errors[fieldNames.PASSWORD] = 'Passwords should match';
+  if (values.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
+    errors.email = 'Invalid email address';
+  }
+
+  if (values.email && values.email.length > 100) {
+    errors.email = 'Email must contain atmost 100 characters length';
+  }
+
+  if (values.password && (values.password.length < 8 || values.password.length > 100)) {
+    errors.password = 'Password must be between 8-100 characters long';
+  }
+
+  if (values.password !== values.confirmPassword) {
+    errors.password = 'Passwords should match';
   }
 
   return errors;
@@ -56,10 +68,10 @@ const renderTextField = ({ label, type, input, meta: { touched, invalid, error }
 );
 
 
-const MaterialLoginForm = props => {
+const MaterialSignInForm = props => {
   const { handleSubmit, pristine, submitting, error, valid } = props;
   
-  const submit = handleSubmit(login);
+  const submit = handleSubmit(signIn);
   return (
     <form onSubmit={submit}>
       <div>
@@ -67,7 +79,7 @@ const MaterialLoginForm = props => {
             style={{ width: `${100}%` }}
             required
             type="text"
-            name={fieldNames.FIRST_NAME}
+            name="firstName"
             component={renderTextField}
             label="First name"
           />
@@ -75,9 +87,8 @@ const MaterialLoginForm = props => {
       <div>
         <Field 
             style={{ width: `${100}%` }}
-            required
             type="text"
-            name={fieldNames.LAST_NAME}
+            name="lastName"
             component={renderTextField}
             label="Last name"
           />
@@ -87,7 +98,7 @@ const MaterialLoginForm = props => {
           style={{ width: `${100}%` }}
           required
           type="email"
-          name={fieldNames.EMAIL}
+          name="email"
           component={renderTextField}
           label="Email"
         />
@@ -97,7 +108,7 @@ const MaterialLoginForm = props => {
             style={{ width: `${100}%` }}
             required
             type="password"
-            name={fieldNames.PASSWORD}
+            name="password"
             component={renderTextField}
             label="Password"
           />
@@ -107,9 +118,9 @@ const MaterialLoginForm = props => {
             style={{ width: `${100}%` }}
             required
             type="password"
-            name={fieldNames.CONFIRM}
+            name="confirmPassword"
             component={renderTextField}
-            label="Password"
+            label="Confirm password"
           />
       </div>
       {error && <strong>{error}</strong>}
@@ -125,4 +136,4 @@ const MaterialLoginForm = props => {
 export default reduxForm({
   form: 'signinUIForm',
   validate
-})(MaterialLoginForm);
+})(MaterialSignInForm);

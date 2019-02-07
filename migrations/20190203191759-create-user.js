@@ -22,6 +22,7 @@ module.exports = {
       uuid: {
         type: Sequelize.UUID,
         allowNull: false,
+        defaultValue: Sequelize.UUIDV1,
         unique: true
       },
       password: {
@@ -32,11 +33,13 @@ module.exports = {
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
       }
     });
   },

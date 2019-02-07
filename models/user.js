@@ -8,8 +8,20 @@ module.exports = (sequelize, DataTypes) => {
       unique: 'compositeIndex'
     },
     password: DataTypes.STRING,
-    uuid: DataTypes.UUID,
-    remember_token: DataTypes.STRING
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      unique: 'compositeIndex'
+    },
+    remember_token: DataTypes.STRING,
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
+    }
   }, {});
   User.associate = function(models) {
     // associations can be defined here

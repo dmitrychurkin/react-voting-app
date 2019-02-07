@@ -1,8 +1,46 @@
+import { Grid, Typography, withStyles } from '@material-ui/core';
+import Link from 'next/link';
 import SigninForm from '../components/SigninForm';
 
-export default props => {
-  console.log('Props from Sign-In page ', props);
+const styles = () => ({
+  containerWidth: {
+    width: `${50}%`
+  }
+});
+
+const SignIn = props => {
+  
   return (
-    <SigninForm />
+    <div>
+      <Grid
+        container
+        direction="row"
+        justify="center"
+        alignItems="center"
+        wrap='nowrap'
+      >
+        <Grid 
+          item
+          className={props.classes.containerWidth}
+        >
+          <Typography 
+            variant="h4" 
+            gutterBottom
+            align="center"
+          >
+            Sign In
+          </Typography>
+          <SigninForm />
+          <Typography variant="h5" gutterBottom>
+            Have an account? 
+          </Typography>
+          <Link as='/login' href='/login'>
+            <a>Login</a> 
+          </Link>
+        </Grid>
+      </Grid>
+    </div>
   );
 };
+
+export default withStyles(styles)(SignIn);
