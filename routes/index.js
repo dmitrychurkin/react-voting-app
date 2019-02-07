@@ -1,4 +1,5 @@
 const { promisify } = require('util');
+const Sequelize = require('sequelize');
 const Router = require('koa-router');
 const passport = require('koa-passport');
 const uuidv4 = require('uuid/v4');
@@ -55,8 +56,8 @@ koaRouter.get('*', async ctx => {
 
     const hash = await hashPromised(password, salt, null);
     const newUser = await sequelize.query(
-      'INSERT INTO `users`(`firstName`, `lastName`, `email`, `password`, `uuid`, `createdAt`, `updatedAt`) VALUES(:firstName, :lastName, :email, :hash, :uuid, :createdAt, :updatedAt)',
-      { replacements: { firstName, lastName: lastName || '', email, hash, uuid: uuidv4(), createdAt: Date.now(), updatedAt: Date.now() }, type: sequelize.QueryTypes.INSERT }
+      'INSERT INTO `users`(`firstName`, `lastName`, `email`, `password`, `uuid`, `createdAt`, `updatedAt`) VALUES(:firstName, :lastName, :email, :hash, :uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+      { replacements: { firstName, lastName: lastName || '', email, hash, uuid: uuidv4() }, type: sequelize.QueryTypes.INSERT }
     );
     console.log('newUser => ', newUser);
     ctx.body = { newUser };
