@@ -46,7 +46,9 @@ koaRouter.get('*', async ctx => {
     if (errors) {
 
       ctx.body = errors;
-      return ctx.throw(400, new Error('Validation error'));
+      const validationError = new Error('Validation error occured');
+      validationError.status = 400;
+      throw validationError;
 
     }
 
@@ -66,9 +68,13 @@ koaRouter.get('*', async ctx => {
 
   }catch(err) {
 
-    ctx.body = err.message;
+    if (typeof err.status !== 'number') {
+      ctx.body = err.message;
+      err.status = 500;
+    }
+
     console.log(err);
-    return ctx.throw(500, err.message);
+    throw err;
 
   }
   

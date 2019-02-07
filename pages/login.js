@@ -1,7 +1,6 @@
 import { Grid, Typography, withStyles } from '@material-ui/core';
 import Link from 'next/link';
 import LoginForm from '../components/LoginForm';
-import { connect } from 'react-redux';
 
 
 const styles = () => ({
@@ -56,10 +55,4 @@ Login.getInitialProps = async (...args) => {
   //console.log(args)
 };
 
-const LoginwithStyles = withStyles(styles)(Login);
-
-export default connect(
-  state => ({
-    state
-  })
-)(LoginwithStyles);
+export default withStyles(styles)(Login);

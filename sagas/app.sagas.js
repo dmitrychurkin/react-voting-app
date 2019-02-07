@@ -2,7 +2,7 @@ import { put, call, takeEvery } from 'redux-saga/effects';
 import { SubmissionError } from 'redux-form';
 import axios from 'axios';
 
-import { login as loginAction, signIn as signInAction } from '../actions';
+import { login as loginAction, signIn as signInAction, confirmEmailOnSignin } from '../actions';
 
 export function* loginWatcherSaga() {
   yield takeEvery(loginAction.REQUEST, loginUserSaga);
@@ -10,6 +10,11 @@ export function* loginWatcherSaga() {
 
 export function* signInWatcherSaga() {
   yield takeEvery(signInAction.REQUEST, signInUserSaga);
+}
+
+export function* emailConfirmedSaga() {
+  yield take(confirmEmailOnSignin);
+  yield put(signInAction.success());
 }
 
 function* loginUserSaga(action) {
@@ -45,14 +50,12 @@ function* signInUserSaga(action) {
 
     yield call([axios, 'post'], '/sign-in', { email, password, firstName, lastName });
 
-    yield put(signInAction.success());
-
   }catch(err) {
 
     console.log('Error occured while user sign-in');
     //console.error(err);
     const formError = new SubmissionError({
-      sigIn: 'Error occured, duaring sign-in',
+      signIn: 'Error occured, duaring sign-in',
       _error: 'Sign-in failed, please check your input data and try again'
     });
 

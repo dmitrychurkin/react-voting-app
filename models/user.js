@@ -5,13 +5,13 @@ module.exports = (sequelize, DataTypes) => {
     lastName: DataTypes.STRING,
     email: {
       type: DataTypes.STRING,
-      unique: 'compositeIndex'
+      unique: true
     },
     password: DataTypes.STRING,
     uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
-      unique: 'compositeIndex'
+      unique: true
     },
     remember_token: DataTypes.STRING,
     createdAt: {

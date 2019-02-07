@@ -69,11 +69,17 @@ const renderTextField = ({ label, type, input, meta: { touched, invalid, error }
 
 
 const MaterialSignInForm = props => {
-  const { handleSubmit, pristine, submitting, error, valid } = props;
+  const { handleSubmit, pristine, submitting, error, valid, reset, onSuccess } = props;
   
   const submit = handleSubmit(signIn);
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={(...args) => {
+      const submitResult = submit(...args);
+      console.log('submitResult => ', submitResult);
+      reset();
+      // TODO: finish here
+      onSuccess();
+    }}>
       <div>
         <Field 
             style={{ width: `${100}%` }}

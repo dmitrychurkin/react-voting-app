@@ -21,7 +21,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (uuid, done) => {
   try {
     const user = await sequelize.query(
-      'SELECT * FROM users WHERE uuid = :uuid',
+      'SELECT * FROM `users` WHERE uuid = :uuid',
       { replacements: { uuid }, type: sequelize.QueryTypes.SELECT }
     );
     done(null, user)
@@ -37,7 +37,7 @@ passport.use(new LocalStrategy({
   passwordField: 'password'
 }, async (email, password, done) => {
   const user = await sequelize.query(
-    'SELECT * FROM users WHERE email = :email',
+    'SELECT * FROM `users` WHERE email = :email',
     { replacements: { email }, type: sequelize.QueryTypes.SELECT }
   );
   if (user) {
@@ -59,7 +59,7 @@ passport.use(new RememberMeStrategy(
   async function(token, done) {
     try {
       const user = await sequelize.query(
-        'SELECT * FROM users WHERE remember_token = :token',
+        'SELECT * FROM `users` WHERE remember_token = :token',
         { replacements: { token }, type: sequelize.QueryTypes.SELECT }
       );
       if (user) {
@@ -83,11 +83,7 @@ passport.use(new RememberMeStrategy(
 
       try {
         await sequelize.query(
-          `UPDATE users 
-          SET 
-            remember_token = :token 
-          WHERE 
-            uuid = :uuid`,
+          'UPDATE `users` SET remember_token = :token WHERE uuid = :uuid',
           { 
             replacements: { 
               token: buf.toString('hex'), 

@@ -1,5 +1,6 @@
 import { Grid, Typography, withStyles } from '@material-ui/core';
 import Link from 'next/link';
+import { withRouter } from 'next/router';
 import SigninForm from '../components/SigninForm';
 
 const styles = () => ({
@@ -8,7 +9,7 @@ const styles = () => ({
   }
 });
 
-const SignIn = props => {
+const SignIn = ({ classes, router }) => {
   
   return (
     <div>
@@ -21,7 +22,7 @@ const SignIn = props => {
       >
         <Grid 
           item
-          className={props.classes.containerWidth}
+          className={classes.containerWidth}
         >
           <Typography 
             variant="h4" 
@@ -30,7 +31,7 @@ const SignIn = props => {
           >
             Sign In
           </Typography>
-          <SigninForm />
+          <SigninForm onSuccess={() => router.push('/confirm-email')} />
           <Typography variant="h5" gutterBottom>
             Have an account? 
           </Typography>
@@ -43,4 +44,4 @@ const SignIn = props => {
   );
 };
 
-export default withStyles(styles)(SignIn);
+export default withRouter(withStyles(styles)(SignIn));

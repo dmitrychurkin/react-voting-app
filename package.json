@@ -8,7 +8,8 @@
     "build": "next build",
     "prod": "next build && cross-env NODE_ENV=production npm start",
     "start:next": "next start -p 8000",
-    "export": "next export"
+    "export": "next export",
+    "dev": "nodemon server"
   },
   "keywords": [],
   "author": "",
