@@ -16,6 +16,7 @@ nextApp.prepare()
     const passport = require('koa-passport');
     const router = require('./routes');
     const db = require('./models');
+    const CSRF = require('koa-csrf');
     // authentication
     require('./util/auth');
 
@@ -24,6 +25,7 @@ nextApp.prepare()
           .use(koaConnect(compression))
           .use(session({}, server))
           .use(bodyParser())
+          .use(new CSRF)
           .use(koaValidator())
           .use(passport.initialize())
           .use(passport.session())

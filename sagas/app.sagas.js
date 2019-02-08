@@ -14,7 +14,7 @@ export function* signInWatcherSaga() {
 
 export function* emailConfirmedSaga() {
   yield take(confirmEmailOnSignin);
-  yield put(signInAction.success());
+  //TODO: handle confirm email action
 }
 
 function* loginUserSaga(action) {
@@ -48,16 +48,31 @@ function* signInUserSaga(action) {
 
   try {
 
-    yield call([axios, 'post'], '/sign-in', { email, password, firstName, lastName });
+    const result = yield call([axios, 'post'], '/sign-in', { email, password, firstName, lastName });
+    yield put(signInAction.success(result));
 
   }catch(err) {
 
-    console.log('Error occured while user sign-in');
-    //console.error(err);
-    const formError = new SubmissionError({
+    let submissionError = {
       signIn: 'Error occured, duaring sign-in',
       _error: 'Sign-in failed, please check your input data and try again'
-    });
+    };
+
+    if (typeof err.response === 'object') {
+
+      const { status, data } = err.response;
+      switch (status) {
+        case 400: {
+          const errorMessage = Array.isArray(data) ? data.map(({ msg }) => msg).join(', ') : '';
+          submissionError = { ...submissionError, ...{ signIn: 'BackendValidationError', _error: errorMessage } };
+          break;
+        }
+      }
+      
+    }
+    console.dir(err);
+    
+    const formError = new SubmissionError(submissionError);
 
     yield put(signInAction.failure(formError));
 

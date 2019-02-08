@@ -1,6 +1,7 @@
 import { reduxForm, Field } from 'redux-form';
-import { TextField, Button } from '@material-ui/core';
+import { TextField, Button, Typography } from '@material-ui/core';
 import { signIn } from '../actions';
+import Csrf from './Csrf';
 
 
 const validate = values => {
@@ -56,7 +57,7 @@ const validate = values => {
 };
 
 const renderTextField = ({ label, type, input, meta: { touched, invalid, error }, ...custom }) => (
-  <TextField 
+  <TextField
     type={type}
     label={label}
     placeholder={label}
@@ -69,19 +70,28 @@ const renderTextField = ({ label, type, input, meta: { touched, invalid, error }
 
 
 const MaterialSignInForm = props => {
-  const { handleSubmit, pristine, submitting, error, valid, reset, onSuccess } = props;
-  
+  const { handleSubmit, pristine, submitting, error, valid, reset, onSuccess, csrf } = props;
+
   const submit = handleSubmit(signIn);
   return (
-    <form onSubmit={(...args) => {
-      const submitResult = submit(...args);
-      console.log('submitResult => ', submitResult);
-      reset();
-      // TODO: finish here
-      onSuccess();
-    }}>
-      <div>
+    <>
+      <form onSubmit={async (...args) => {
+        const result = await submit(...args);
+        console.log('result ', result);
+        if (typeof result !== 'object' || !('_error' in result)) {
+          // clear form
+          reset();
+          // redirect to confirm-email page
+          onSuccess();
+        }
+      }}>
         <Field 
+          type="hidden" 
+          name="_csrf" 
+          component={() => <Csrf csrf={csrf} />}
+        />
+        <div>
+          <Field
             style={{ width: `${100}%` }}
             required
             type="text"
@@ -89,28 +99,28 @@ const MaterialSignInForm = props => {
             component={renderTextField}
             label="First name"
           />
-      </div>
-      <div>
-        <Field 
+        </div>
+        <div>
+          <Field
             style={{ width: `${100}%` }}
             type="text"
             name="lastName"
             component={renderTextField}
             label="Last name"
           />
-      </div>
-      <div>
-        <Field 
-          style={{ width: `${100}%` }}
-          required
-          type="email"
-          name="email"
-          component={renderTextField}
-          label="Email"
-        />
-      </div>
-      <div>
-        <Field 
+        </div>
+        <div>
+          <Field
+            style={{ width: `${100}%` }}
+            required
+            type="email"
+            name="email"
+            component={renderTextField}
+            label="Email"
+          />
+        </div>
+        <div>
+          <Field
             style={{ width: `${100}%` }}
             required
             type="password"
@@ -118,9 +128,9 @@ const MaterialSignInForm = props => {
             component={renderTextField}
             label="Password"
           />
-      </div>
-      <div>
-        <Field 
+        </div>
+        <div>
+          <Field
             style={{ width: `${100}%` }}
             required
             type="password"
@@ -128,14 +138,15 @@ const MaterialSignInForm = props => {
             component={renderTextField}
             label="Confirm password"
           />
-      </div>
-      {error && <strong>{error}</strong>}
-      <div>
-        <Button type="submit" variant="contained" color="primary" disabled={pristine || submitting || !valid}>
-          Signin
+        </div>
+        <div>
+          <Button type="submit" variant="contained" color="primary" disabled={pristine || submitting || !valid}>
+            Signin
         </Button>
-      </div>
-    </form>
+        </div>
+      </form>
+      {error && <Typography color="error">{error.toString().charAt(0).toUpperCase() + error.toString().slice(1)}</Typography>}
+    </>
   );
 };
 

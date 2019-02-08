@@ -1,6 +1,7 @@
 import { reduxForm, Field } from 'redux-form';
 import { TextField, Button, FormControlLabel, Checkbox } from '@material-ui/core';
 import { login } from '../actions';
+import Csrf from './Csrf';
 
 const validate = values => {
 
@@ -46,11 +47,16 @@ const renderCheckbox = ({ label }) => (
 )
 
 const MaterialLoginForm = props => {
-  const { handleSubmit, pristine, submitting, error, valid } = props;
+  const { handleSubmit, pristine, submitting, error, valid, csrf } = props;
   
   const submit = handleSubmit(login);
   return (
     <form onSubmit={submit}>
+      <Field 
+        type="hidden" 
+        name="_csrf" 
+        component={() => <Csrf csrf={csrf} />}
+      />
       <div>
         <Field 
           style={{ width: `${100}%` }}

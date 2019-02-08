@@ -9,7 +9,7 @@ const styles = () => ({
   }
 });
 
-const SignIn = ({ classes, router }) => {
+const SignIn = ({ classes, router, csrf }) => {
   
   return (
     <div>
@@ -31,7 +31,7 @@ const SignIn = ({ classes, router }) => {
           >
             Sign In
           </Typography>
-          <SigninForm onSuccess={() => router.push('/confirm-email')} />
+          <SigninForm csrf={csrf} onSuccess={() => router.push('/confirm-email')} />
           <Typography variant="h5" gutterBottom>
             Have an account? 
           </Typography>
@@ -42,6 +42,11 @@ const SignIn = ({ classes, router }) => {
       </Grid>
     </div>
   );
+};
+
+SignIn.getInitialProps = (ctx, temp) => {
+  console.log('temp => ', temp);
+  return { csrf: ctx.csrf };
 };
 
 export default withRouter(withStyles(styles)(SignIn));

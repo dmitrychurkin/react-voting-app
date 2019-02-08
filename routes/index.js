@@ -3,14 +3,17 @@ const Sequelize = require('sequelize');
 const Router = require('koa-router');
 const passport = require('koa-passport');
 const uuidv4 = require('uuid/v4');
+const uuidv5 = require('uuid/v5');
 const bcrypt = require('bcrypt-nodejs');
 const { handle } = require('../next.app');
 const { sequelize } = require('../models');
+const { SALT_ROUNDS, MAILGUN_API_KEY, MAILGUN_DOMAIN } = require('../config');
+const registrationConfirmationHelper = require('../emails/confirm-registration');
+const mailgun = require('mailgun-js')({ apiKey: MAILGUN_API_KEY, domain: MAILGUN_DOMAIN });
 
 const genSaltPromised = promisify(bcrypt.genSalt);
 const hashPromised = promisify(bcrypt.hash);
 
-const defaultSaltRounds = 10;
 
 const koaRouter = new Router;
 
@@ -47,36 +50,62 @@ koaRouter.get('*', async ctx => {
 
       ctx.body = errors;
       const validationError = new Error('Validation error occured');
-      validationError.status = 400;
+      ctx.status = validationError.status = 400;
       throw validationError;
 
     }
 
-    const salt = await genSaltPromised(defaultSaltRounds);
+    const salt = await genSaltPromised(SALT_ROUNDS || 10);
 
     const { email, firstName, lastName, password } = ctx.request.body;
+    const accountConfirmationToken = uuidv5(ctx.origin, uuidv5.URL);
+    const confirmationLink = `${ctx.origin}/confirm-email/${accountConfirmationToken}`;
+    const date = new Date();
+    date.setMinutes(date.getMinutes() + 30);
 
     const hash = await hashPromised(password, salt, null);
     const newUser = await sequelize.query(
-      'INSERT INTO `users`(`firstName`, `lastName`, `email`, `password`, `uuid`, `createdAt`, `updatedAt`) VALUES(:firstName, :lastName, :email, :hash, :uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
-      { replacements: { firstName, lastName: lastName || '', email, hash, uuid: uuidv4() }, type: sequelize.QueryTypes.INSERT }
+      'INSERT INTO `users`(`firstName`, `lastName`, `email`, `password`, `uuid`, `accountConfirmationToken`, `accountConfirmationTokenExpiresAt`, `createdAt`, `updatedAt`) VALUES(:firstName, :lastName, :email, :hash, :uuid, :accountConfirmationToken, :accountConfirmationTokenExpiresAt, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+      { 
+        replacements: { 
+          firstName, 
+          lastName: lastName || '', 
+          email, 
+          hash, 
+          uuid: uuidv4(),
+          accountConfirmationToken,
+          accountConfirmationTokenExpiresAt: date.getTime()
+        }, 
+        type: sequelize.QueryTypes.INSERT 
+      }
     );
-    console.log('newUser => ', newUser);
-    ctx.body = { newUser };
 
-    await next();
+    const body = await mailgun.messages().send(registrationConfirmationHelper({ to: email }, firstName, confirmationLink));
+    console.log('newUser, body => ', newUser, body);
+    ctx.body = { newUser, body };
+    
 
   }catch(err) {
 
-    if (typeof err.status !== 'number') {
-      ctx.body = err.message;
-      err.status = 500;
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      ctx.status = 400;
+      // unify shape to validationErrors
+      /**
+       * Array<{
+       *  msg: string;
+       *  param?: string;
+       *  value?: string;
+       * }>
+       */
+      ctx.body = err.errors.reduce((prev, errObj) => [...prev, { msg: errObj.message }], []);
+    }else if (typeof err.status !== 'number') {
+      ctx.status = 500;
+      ctx.body = err.message || '';
     }
 
-    console.log(err);
-    throw err;
-
   }
+
+  await next();
   
 });
 

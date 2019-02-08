@@ -13,6 +13,8 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.UUIDV4,
       unique: true
     },
+    accountConfirmationToken: DataTypes.STRING,
+    accountConfirmationTokenExpiresAt: DataTypes.INTEGER,
     remember_token: DataTypes.STRING,
     createdAt: {
       type: DataTypes.DATE,

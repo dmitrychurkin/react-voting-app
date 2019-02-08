@@ -7,8 +7,8 @@ const defaultState = { userLogged: false, error: null, requestSent: false };
 
 
 const appReducer = handleActions({
-  [combineActions(login.REQUEST, signIn.REQUEST)]: state => ({ ...state, requestSent: true }),
-  [combineActions(login.SUCCESS, signIn.SUCCESS)]: state => ({ ...state, userLogged: true, requestSent: false }),
+  [combineActions(login.REQUEST, signIn.REQUEST, signIn.SUCCESS)]: state => ({ ...state, requestSent: true }),
+  [login.SUCCESS]: state => ({ ...state, userLogged: true, requestSent: false }),
   [login.FAILURE]: (state, { payload: { errors } }) => ({ ...state, error: errors.login, requestSent: false }),
   [signIn.FAILURE]: (state, { payload: { errors } }) => ({ ...state, error: errors.signIn, requestSent: false })
 }, defaultState);
