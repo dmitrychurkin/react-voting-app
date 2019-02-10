@@ -1,7 +1,6 @@
 import { reduxForm, Field } from 'redux-form';
-import { TextField, Button, FormControlLabel, Checkbox } from '@material-ui/core';
+import { TextField, Button, FormControlLabel, Checkbox, Typography } from '@material-ui/core';
 import { login } from '../actions';
-import Csrf from './Csrf';
 
 const validate = values => {
 
@@ -47,15 +46,15 @@ const renderCheckbox = ({ label }) => (
 )
 
 const MaterialLoginForm = props => {
-  const { handleSubmit, pristine, submitting, error, valid, csrf } = props;
+  const { handleSubmit, pristine, submitting, error, valid } = props;
   
   const submit = handleSubmit(login);
   return (
     <form onSubmit={submit}>
       <Field 
-        type="hidden" 
+        type="hidden"
         name="_csrf" 
-        component={() => <Csrf csrf={csrf} />}
+        component="input"
       />
       <div>
         <Field 
@@ -78,7 +77,7 @@ const MaterialLoginForm = props => {
       <div>
         <Field name="remember_me" component={renderCheckbox} label="Keep me signed" />
       </div>
-      {error && <strong>{error}</strong>}
+      {error && <Typography color="error">{error.toString().charAt(0).toUpperCase() + error.toString().slice(1)}</Typography>}
       <div>
         <Button type="submit" variant="contained" color="primary" disabled={pristine || submitting || !valid}>
           Login

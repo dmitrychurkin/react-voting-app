@@ -14,7 +14,15 @@ module.exports = (sequelize, DataTypes) => {
       unique: true
     },
     accountConfirmationToken: DataTypes.STRING,
-    accountConfirmationTokenExpiresAt: DataTypes.INTEGER,
+    accountConfirmationTokenExpiresAt: DataTypes.BIGINT,
+    accountConfirmed: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    accountConfirmedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
+    },
     remember_token: DataTypes.STRING,
     createdAt: {
       type: DataTypes.DATE,

@@ -31,6 +31,20 @@ module.exports = {
       remember_token: {
         type: Sequelize.STRING
       },
+      accountConfirmationToken: {
+        type: Sequelize.STRING
+      },
+      accountConfirmationTokenExpiresAt: {
+        typs: Sequelize.BIGINT
+      },
+      accountConfirmed: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
+      accountConfirmedAt: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

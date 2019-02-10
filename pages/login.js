@@ -1,6 +1,6 @@
 import { Grid, Typography, withStyles } from '@material-ui/core';
 import Link from 'next/link';
-import LoginForm from '../components/LoginForm';
+import LoginContainer from '../containers/LoginContainer';
 
 
 const styles = () => ({
@@ -31,7 +31,7 @@ const Login = props => {
           >
             <span className="foo">Login</span>
           </Typography>
-          <LoginForm />
+          <LoginContainer />
           <Link as='/forgot' href='/forgot'>
             <a>Forgot password</a>
           </Link>
@@ -52,7 +52,7 @@ const Login = props => {
 
 
 Login.getInitialProps = async (...args) => {
-  //console.log(args)
+  console.log('Login.getInitialProps => ', args)
 };
 
 export default withStyles(styles)(Login);

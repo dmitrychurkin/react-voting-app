@@ -2,7 +2,7 @@ import { put, call, takeEvery } from 'redux-saga/effects';
 import { SubmissionError } from 'redux-form';
 import axios from 'axios';
 
-import { login as loginAction, signIn as signInAction, confirmEmailOnSignin } from '../actions';
+import { login as loginAction, signIn as signInAction } from '../actions';
 
 export function* loginWatcherSaga() {
   yield takeEvery(loginAction.REQUEST, loginUserSaga);
@@ -12,10 +12,6 @@ export function* signInWatcherSaga() {
   yield takeEvery(signInAction.REQUEST, signInUserSaga);
 }
 
-export function* emailConfirmedSaga() {
-  yield take(confirmEmailOnSignin);
-  //TODO: handle confirm email action
-}
 
 function* loginUserSaga(action) {
 
@@ -44,11 +40,9 @@ function* loginUserSaga(action) {
 
 function* signInUserSaga(action) {
 
-  const { firstName, lastName, password, email } = action.payload;
-
   try {
 
-    const result = yield call([axios, 'post'], '/sign-in', { email, password, firstName, lastName });
+    const result = yield call([axios, 'post'], '/sign-in', action.payload);
     yield put(signInAction.success(result));
 
   }catch(err) {

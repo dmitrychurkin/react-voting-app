@@ -5,4 +5,6 @@ export const login = createFormAction('LOGIN');
 
 export const signIn = createFormAction('SIGN-IN');
 
-export const confirmEmailOnSignin = createAction('CONFIRM_EMAIL_ON_SIGNIN');
+export const emailConfiramtionState = createAction('EMAIL_CONFIRMATION_STATE');
+
+export const setCsrf = createAction('SET_CSRF');

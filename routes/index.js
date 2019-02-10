@@ -1,11 +1,10 @@
 const { promisify } = require('util');
-const Sequelize = require('sequelize');
 const Router = require('koa-router');
 const passport = require('koa-passport');
 const uuidv4 = require('uuid/v4');
 const uuidv5 = require('uuid/v5');
 const bcrypt = require('bcrypt-nodejs');
-const { handle } = require('../next.app');
+const { handle, app } = require('../next.app');
 const { sequelize } = require('../models');
 const { SALT_ROUNDS, MAILGUN_API_KEY, MAILGUN_DOMAIN } = require('../config');
 const registrationConfirmationHelper = require('../emails/confirm-registration');
@@ -17,23 +16,138 @@ const hashPromised = promisify(bcrypt.hash);
 
 const koaRouter = new Router;
 
+koaRouter.get('/api/auth', async ctx => {
+
+  ctx.set('Cache-Control', 'no-cache');
+  ctx.body = { auth: ctx.isAuthenticated() };
+
+});
+
+koaRouter.get('/account', async ctx => {
+  if (ctx.isUnauthenticated()) {
+    return ctx.redirect(`/login?r=${encodeURIComponent(ctx.href)}`);
+  }
+
+  if (ctx.isAuthenticated()) {
+    const [ confirmedUser ] = await sequelize.query('SELECT * FROM `users` WHERE uuid = :uuid',
+      { replacements: { uuid: ctx.state.user.uuid }, type: sequelize.QueryTypes.SELECT }
+    );
+    if (!confirmedUser.accountConfirmed) {
+      return ctx.redirect('/confirm-email');
+    }
+  }
+
+  await app.render(ctx.req, ctx.res, '/account', ctx.query);
+  ctx.respond = false;
+});
+
+koaRouter.get('/sign-in', async ctx => {
+  await app.render(ctx.req, ctx.res, '/sign-in', ctx.query);
+  ctx.respond = false;
+});
+
+koaRouter.get('/login', async ctx => {
+  await app.render(ctx.req, ctx.res, '/login', ctx.query);
+  ctx.respond = false;
+});
+
+koaRouter.get('/confirm-email', async ctx => {
+
+  if (ctx.isAuthenticated()) {
+    const [ confirmedUser ] = await sequelize.query('SELECT * FROM `users` WHERE uuid = :uuid',
+      { replacements: { uuid: ctx.state.user.uuid }, type: sequelize.QueryTypes.SELECT }
+    );
+    if (!confirmedUser.accountConfirmed) {
+      ctx.res.customData.confirmEmailStatusCode = confirmedUser.accountConfirmationTokenExpiresAt >= Date.now() ? 1 : 2;
+    }
+  }else {
+
+    const { accountConfirmationToken, accountConfirmationTokenExpiresAt } = ctx.session;
+    console.log('session accountConfirmationToken, accountConfirmationTokenExpiresAt', accountConfirmationToken, accountConfirmationTokenExpiresAt);
+    accountConfirmationToken ? 1 : -1;
+    if (accountConfirmationToken) {
+      ctx.res.customData.confirmEmailStatusCode = accountConfirmationTokenExpiresAt >= Date.now() ? 1 : 2;
+      // code 1 - show message about check email
+      // code 2 - token expires need to resend 
+    }else {
+      ctx.res.customData.confirmEmailStatusCode = -1; // no token exists - show 404
+    }
+  
+  }
+
+  await app.render(ctx.req, ctx.res, '/confirm-email', ctx.query);
+  ctx.respond = false;
+
+});
+
+koaRouter.get('/confirm-email/:token', async ctx => {
+
+  const [ confirmedUser ] = await sequelize.query('SELECT * FROM `users` WHERE accountConfirmationToken = :accountConfirmationToken',
+    { replacements: { accountConfirmationToken: ctx.params.token }, type: sequelize.QueryTypes.SELECT }
+  );
+
+  console.log('confirmedUser => ', confirmedUser);
+
+  if (confirmedUser) {
+
+    if (ctx.isAuthenticated()) {
+      return ctx.redirect('/account');
+    }
+
+    if (confirmedUser.accountConfirmationTokenExpiresAt >= Date.now()) {
+      const login = await ctx.login(confirmedUser);
+      console.log('login => ', login);
+      const updateResult = await sequelize.query('UPDATE `users` SET accountConfirmed = :accountConfirmed, accountConfirmedAt = CURRENT_TIMESTAMP WHERE uuid = :uuid',
+        { replacements: { accountConfirmed: true, uuid: confirmedUser.uuid }, type: sequelize.QueryTypes.UPDATE }
+      );
+      console.log('updateResult => ', updateResult);
+      delete ctx.session.accountConfirmationToken;
+      delete ctx.session.accountConfirmationTokenExpiresAt;
+      ctx.res.customData.confirmEmailStatusCode = 3;
+      // 3 - show confirmation success
+
+    }else {
+      ctx.res.customData.confirmEmailStatusCode = 2;
+    }
+
+  }else {
+    ctx.res.customData.confirmEmailStatusCode = -1;
+  }
+
+  await app.render(ctx.req, ctx.res, '/confirm-email', ctx.query);
+  ctx.respond = false;
+
+});
+
 koaRouter.get('*', async ctx => {
   await handle(ctx.req, ctx.res);
   ctx.respond = false;
-})
-.post('/login', async ctx => {
+});
+
+koaRouter.post('/login', async ctx => {
   return passport.authenticate('local', (err, user) => {
-    if (user === false) {
-      ctx.body = { success: false };
-      ctx.throw(401);
-    } else {
-      ctx.body = { success: true };
-      return ctx.login(user);
+    if (err) {
+      ctx.status = 500;
+      return;
     }
+    if (user === false) {
+      ctx.status = 401;
+      return;
+    }
+    
+    if (!user.accountConfirmed) {
+      ctx.body = { 
+        //TODO: finish here 
+      };
+    }
+
+      return ctx.login(user);
+    
   })(ctx);
   
-})
-.post('/sign-in', async (ctx, next) => {
+});
+
+koaRouter.post('/sign-in', async ctx => {
 
   ctx.checkBody('firstName', 'First name can\'t be empty').notEmpty();
   ctx.checkBody('firstName', 'First name must have atleast 3 characters long, please try again.').len(3, 100);
@@ -62,28 +176,34 @@ koaRouter.get('*', async ctx => {
     const confirmationLink = `${ctx.origin}/confirm-email/${accountConfirmationToken}`;
     const date = new Date();
     date.setMinutes(date.getMinutes() + 30);
+    const accountConfirmationTokenExpiresAt = date.getTime();
 
     const hash = await hashPromised(password, salt, null);
-    const newUser = await sequelize.query(
-      'INSERT INTO `users`(`firstName`, `lastName`, `email`, `password`, `uuid`, `accountConfirmationToken`, `accountConfirmationTokenExpiresAt`, `createdAt`, `updatedAt`) VALUES(:firstName, :lastName, :email, :hash, :uuid, :accountConfirmationToken, :accountConfirmationTokenExpiresAt, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
-      { 
-        replacements: { 
-          firstName, 
-          lastName: lastName || '', 
-          email, 
-          hash, 
-          uuid: uuidv4(),
-          accountConfirmationToken,
-          accountConfirmationTokenExpiresAt: date.getTime()
-        }, 
-        type: sequelize.QueryTypes.INSERT 
-      }
-    );
 
-    const body = await mailgun.messages().send(registrationConfirmationHelper({ to: email }, firstName, confirmationLink));
-    console.log('newUser, body => ', newUser, body);
-    ctx.body = { newUser, body };
-    
+    await Promise.all([
+      sequelize.query(
+        'INSERT INTO `users`(`firstName`, `lastName`, `email`, `password`, `uuid`, `accountConfirmationToken`, `accountConfirmationTokenExpiresAt`, `createdAt`, `updatedAt`) VALUES(:firstName, :lastName, :email, :hash, :uuid, :accountConfirmationToken, :accountConfirmationTokenExpiresAt, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+        { 
+          replacements: { 
+            firstName, 
+            lastName: lastName || '', 
+            email, 
+            hash, 
+            uuid: uuidv4(),
+            accountConfirmationToken,
+            accountConfirmationTokenExpiresAt 
+          }, 
+          type: sequelize.QueryTypes.INSERT 
+        }
+      ),
+      mailgun.messages().send(registrationConfirmationHelper({ to: email }, firstName, confirmationLink))
+    ]);
+
+    ctx.session.accountConfirmationToken = accountConfirmationToken;
+    ctx.session.accountConfirmationTokenExpiresAt = accountConfirmationTokenExpiresAt;
+
+    ctx.status = 200;
+
 
   }catch(err) {
 
@@ -105,8 +225,6 @@ koaRouter.get('*', async ctx => {
 
   }
 
-  await next();
-  
 });
 
 module.exports = koaRouter;

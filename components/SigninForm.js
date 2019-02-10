@@ -1,7 +1,7 @@
 import { reduxForm, Field } from 'redux-form';
 import { TextField, Button, Typography } from '@material-ui/core';
 import { signIn } from '../actions';
-import Csrf from './Csrf';
+import Router from 'next/router';
 
 
 const validate = values => {
@@ -70,7 +70,7 @@ const renderTextField = ({ label, type, input, meta: { touched, invalid, error }
 
 
 const MaterialSignInForm = props => {
-  const { handleSubmit, pristine, submitting, error, valid, reset, onSuccess, csrf } = props;
+  const { handleSubmit, pristine, submitting, error, valid, reset, setEmailConfiramtionState } = props;
 
   const submit = handleSubmit(signIn);
   return (
@@ -78,17 +78,20 @@ const MaterialSignInForm = props => {
       <form onSubmit={async (...args) => {
         const result = await submit(...args);
         console.log('result ', result);
+        
         if (typeof result !== 'object' || !('_error' in result)) {
           // clear form
           reset();
+          // set email confirmation state
+          setEmailConfiramtionState(1);
           // redirect to confirm-email page
-          onSuccess();
+          Router.push('/confirm-email');
         }
       }}>
         <Field 
-          type="hidden" 
+          type="hidden"
           name="_csrf" 
-          component={() => <Csrf csrf={csrf} />}
+          component="input"
         />
         <div>
           <Field
@@ -98,6 +101,7 @@ const MaterialSignInForm = props => {
             name="firstName"
             component={renderTextField}
             label="First name"
+            onFocus={() => error && reset()}
           />
         </div>
         <div>
@@ -107,6 +111,7 @@ const MaterialSignInForm = props => {
             name="lastName"
             component={renderTextField}
             label="Last name"
+            onFocus={() => error && reset()}
           />
         </div>
         <div>
@@ -117,6 +122,7 @@ const MaterialSignInForm = props => {
             name="email"
             component={renderTextField}
             label="Email"
+            onFocus={() => error && reset()}
           />
         </div>
         <div>
@@ -127,6 +133,7 @@ const MaterialSignInForm = props => {
             name="password"
             component={renderTextField}
             label="Password"
+            onFocus={() => error && reset()}
           />
         </div>
         <div>
@@ -137,12 +144,13 @@ const MaterialSignInForm = props => {
             name="confirmPassword"
             component={renderTextField}
             label="Confirm password"
+            onFocus={() => error && reset()}
           />
         </div>
         <div>
           <Button type="submit" variant="contained" color="primary" disabled={pristine || submitting || !valid}>
             Signin
-        </Button>
+          </Button>
         </div>
       </form>
       {error && <Typography color="error">{error.toString().charAt(0).toUpperCase() + error.toString().slice(1)}</Typography>}

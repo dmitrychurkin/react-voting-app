@@ -30,6 +30,19 @@ nextApp.prepare()
           .use(passport.initialize())
           .use(passport.session())
           .use(passport.authenticate('remember-me'))
+          .use(async (ctx, next) => {
+            ctx.res.statusCode = 200;
+            if (ctx.method === 'GET') {
+
+              if (typeof ctx.res.customData !== 'object') {
+                ctx.res.customData = {};
+              }
+            
+              ctx.res.customData.csrf = ctx.csrf;
+
+            }
+            await next();
+          })
           .use(router.routes())
           .use(router.allowedMethods());
 

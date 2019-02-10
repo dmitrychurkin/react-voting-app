@@ -20,7 +20,7 @@ passport.serializeUser((user, done) => {
  */
 passport.deserializeUser(async (uuid, done) => {
   try {
-    const user = await sequelize.query(
+    const [ user ] = await sequelize.query(
       'SELECT * FROM `users` WHERE uuid = :uuid',
       { replacements: { uuid }, type: sequelize.QueryTypes.SELECT }
     );
@@ -36,7 +36,7 @@ passport.use(new LocalStrategy({
   usernameField: 'email',
   passwordField: 'password'
 }, async (email, password, done) => {
-  const user = await sequelize.query(
+  const [ user ] = await sequelize.query(
     'SELECT * FROM `users` WHERE email = :email',
     { replacements: { email }, type: sequelize.QueryTypes.SELECT }
   );
@@ -56,9 +56,9 @@ passport.use(new LocalStrategy({
 const RememberMeStrategy = require('passport-remember-me').Strategy;
 
 passport.use(new RememberMeStrategy(
-  async function(token, done) {
+  async (token, done) => {
     try {
-      const user = await sequelize.query(
+      const [ user ] = await sequelize.query(
         'SELECT * FROM `users` WHERE remember_token = :token',
         { replacements: { token }, type: sequelize.QueryTypes.SELECT }
       );
@@ -74,7 +74,7 @@ passport.use(new RememberMeStrategy(
     }
     
   },
-  function(user, done) {
+  (user, done) => {
     
     crypto.randomBytes(64, async (err, buf) => {
       if (err) {
@@ -92,9 +92,13 @@ passport.use(new RememberMeStrategy(
             type: sequelize.QueryTypes.SELECT 
           }
         );
+
         return done(null, token);
+
       }catch(err) {
+
         return done(err);
+        
       }
 
     });
