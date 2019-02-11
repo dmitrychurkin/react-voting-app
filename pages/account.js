@@ -1,4 +1,3 @@
-import axios from 'axios';
 import Router from 'next/router';
 import Layout from '../components/Layout';
 
@@ -8,15 +7,9 @@ const Account = props => (
   </Layout>
 );
 
-Account.getInitialProps = async ({ isServer }) => {
+Account.getInitialProps = async ({ isServer, store }) => {
 
-  if (!isServer) {
-    const { auth } = await axios.get(`/api/auth?_=${Math.round(Date.now()*Math.random())}`);
-    console.log('Account.getInitialProps auth ', auth);
-    if (auth) {
-      // TODO: handle some specific to authed user action
-      return;
-    }
+  if (!isServer && !store.getState().app.userLogged) {
     return Router.replace({ pathname: '/login', query: { r: encodeURIComponent(window.location.href) } });
   }
 

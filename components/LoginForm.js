@@ -1,5 +1,6 @@
 import { reduxForm, Field } from 'redux-form';
-import { TextField, Button, FormControlLabel, Checkbox, Typography } from '@material-ui/core';
+import Router from 'next/router';
+import { Button, Typography, TextField, FormControlLabel, Checkbox } from '@material-ui/core';
 import { login } from '../actions';
 
 const validate = values => {
@@ -36,21 +37,39 @@ const renderTextField = ({ label, type, input, meta: { touched, invalid, error }
   />
 );
 
-const renderCheckbox = ({ label }) => (
-  <div>
-    <FormControlLabel
-      control={<Checkbox />}
-      label={label}
-    />
-  </div>
-)
+const renderCheckbox = ({ input, label }) => (
+  <FormControlLabel
+    control={
+      <Checkbox 
+        checked={input.value ? true : false}
+        onChange={input.onChange}
+      />
+    }
+    label={label}
+  />
+);
 
 const MaterialLoginForm = props => {
   const { handleSubmit, pristine, submitting, error, valid } = props;
   
   const submit = handleSubmit(login);
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={async (...args) => {
+      const result = await submit(...args);
+      console.log('result login ', result);
+      
+      if (typeof result !== 'object' || !('_error' in result)) {
+        // clear form
+        reset();
+        if (result.emailConfirmationState != 3) {
+          Router.push('/confirm-email');
+          return;
+        }
+
+        Router.push('/account');
+        
+      }
+    }}>
       <Field 
         type="hidden"
         name="_csrf" 

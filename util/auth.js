@@ -1,7 +1,12 @@
+const { promisify } = require('util');
 const passport = require('koa-passport');
 const bcrypt = require('bcrypt-nodejs');
-const { sequelize } = require('../models');
 const crypto = require('crypto');
+const { sequelize } = require('../models');
+const { REMEMBER_ME_TOKEN_LENGTH } = require('../config');
+
+const bcryptComparePromised = promisify(bcrypt.compare);
+const randomBytesPromised = promisify(crypto.randomBytes);
 
 /**
  * Serialize user
@@ -20,14 +25,21 @@ passport.serializeUser((user, done) => {
  */
 passport.deserializeUser(async (uuid, done) => {
   try {
+
     const [ user ] = await sequelize.query(
       'SELECT * FROM `users` WHERE uuid = :uuid',
       { replacements: { uuid }, type: sequelize.QueryTypes.SELECT }
     );
-    done(null, user)
+    
   } catch (err) {
+
     done(err);
+    return;
+
   }
+
+  done(null, user);
+
 });
 
 const LocalStrategy = require('passport-local').Strategy;
@@ -36,71 +48,87 @@ passport.use(new LocalStrategy({
   usernameField: 'email',
   passwordField: 'password'
 }, async (email, password, done) => {
-  const [ user ] = await sequelize.query(
-    'SELECT * FROM `users` WHERE email = :email',
-    { replacements: { email }, type: sequelize.QueryTypes.SELECT }
-  );
-  if (user) {
-    bcrypt.compare(password, user.password, (error, response) => {
-      if (response) {
-        done(null, user)
-      } else { 
-        done(null, false)
+
+  try {
+
+    const [ user ] = await sequelize.query(
+      'SELECT * FROM `users` WHERE email = :email',
+      { replacements: { email }, type: sequelize.QueryTypes.SELECT }
+    );
+
+    if (user) {
+
+      const passwordsMatch = await bcryptComparePromised(password, user.password);
+
+      if (passwordsMatch) {
+        done(null, user);
+        return;
       }
-    })
-  } else {
-    done(null, false)
-  }
+
+    }
+ 
+  }catch(err) { console.error(err); }
+
+  done(null, false);
+  
 }));
 
 const RememberMeStrategy = require('passport-remember-me').Strategy;
 
 passport.use(new RememberMeStrategy(
   async (token, done) => {
+
     try {
+
       const [ user ] = await sequelize.query(
         'SELECT * FROM `users` WHERE remember_token = :token',
         { replacements: { token }, type: sequelize.QueryTypes.SELECT }
       );
+
       if (user) {
-        return done(null, user);
+
+        done(null, user);
+        return;
+
       }
-      return done(null, false);
+      
 
     }catch(err) {
 
-      return done(err);
+      done(err);
+      return;
 
     }
-    
+
+    done(null, false);
+
   },
-  (user, done) => {
+  async (user, done) => {
     
-    crypto.randomBytes(64, async (err, buf) => {
-      if (err) {
-        return done(err);
-      }
+    try {
 
-      try {
-        await sequelize.query(
-          'UPDATE `users` SET remember_token = :token WHERE uuid = :uuid',
-          { 
-            replacements: { 
-              token: buf.toString('hex'), 
-              uuid: user.uuid
-            }, 
-            type: sequelize.QueryTypes.SELECT 
-          }
-        );
+      const buffer = await randomBytesPromised(REMEMBER_ME_TOKEN_LENGTH);
+      const rememberToken = buffer.toString('hex');
 
-        return done(null, token);
+      await sequelize.query(
+        'UPDATE `users` SET remember_token = :rememberToken WHERE uuid = :uuid',
+        { 
+          replacements: { 
+            rememberToken, 
+            uuid: user.uuid
+          }, 
+          type: sequelize.QueryTypes.SELECT 
+        }
+      );
 
-      }catch(err) {
+    }catch(err) {
 
-        return done(err);
-        
-      }
+      done(err);
+      return;
 
-    });
+    }
+
+    done(null, token);
+
   }
 ));

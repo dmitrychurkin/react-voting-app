@@ -4,24 +4,19 @@ const passport = require('koa-passport');
 const uuidv4 = require('uuid/v4');
 const uuidv5 = require('uuid/v5');
 const bcrypt = require('bcrypt-nodejs');
+const crypto = require('crypto');
 const { handle, app } = require('../next.app');
 const { sequelize } = require('../models');
-const { SALT_ROUNDS, MAILGUN_API_KEY, MAILGUN_DOMAIN } = require('../config');
+const { SALT_ROUNDS, MAILGUN_API_KEY, MAILGUN_DOMAIN, REMEMBER_ME_TOKEN_LENGTH } = require('../config');
 const registrationConfirmationHelper = require('../emails/confirm-registration');
 const mailgun = require('mailgun-js')({ apiKey: MAILGUN_API_KEY, domain: MAILGUN_DOMAIN });
 
 const genSaltPromised = promisify(bcrypt.genSalt);
 const hashPromised = promisify(bcrypt.hash);
+const randomBytesPromised = promisify(crypto.randomBytes);
 
 
 const koaRouter = new Router;
-
-koaRouter.get('/api/auth', async ctx => {
-
-  ctx.set('Cache-Control', 'no-cache');
-  ctx.body = { auth: ctx.isAuthenticated() };
-
-});
 
 koaRouter.get('/account', async ctx => {
   if (ctx.isUnauthenticated()) {
@@ -125,7 +120,8 @@ koaRouter.get('*', async ctx => {
 });
 
 koaRouter.post('/login', async ctx => {
-  return passport.authenticate('local', (err, user) => {
+  console.log('Request body => ', ctx.request.body);
+  return passport.authenticate('local', async (err, user) => {
     if (err) {
       ctx.status = 500;
       return;
@@ -134,17 +130,41 @@ koaRouter.post('/login', async ctx => {
       ctx.status = 401;
       return;
     }
-    
+
+    const loginResult = await ctx.login(user);
+    console.log('loginResult => ', loginResult);
+
+    let response = { userLogged: true, emailConfirmationState: 3 };
+
     if (!user.accountConfirmed) {
-      ctx.body = { 
-        //TODO: finish here 
-      };
+      const emailConfirmationState = user.accountConfirmationTokenExpiresAt >= Date.now() ? 1 : 2;
+      response = Object.assign({}, response, { emailConfirmationState });
     }
 
-      return ctx.login(user);
-    
+    const remember_me = ctx.request.body.remember_me;
+
+    if (remember_me) {
+
+      const buffer = await randomBytesPromised(REMEMBER_ME_TOKEN_LENGTH);
+
+      const rememberToken = buffer.toString('hex');
+
+      await sequelize.query(
+        'UPDATE `users` SET remember_token = :rememberToken WHERE uuid = :uuid',
+        { 
+          replacements: { 
+            rememberToken, 
+            uuid: user.uuid
+          }, 
+          type: sequelize.QueryTypes.SELECT 
+        }
+      );
+
+    }
+
+    ctx.body = { ...response };
+
   })(ctx);
-  
 });
 
 koaRouter.post('/sign-in', async ctx => {

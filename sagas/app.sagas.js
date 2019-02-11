@@ -15,22 +15,36 @@ export function* signInWatcherSaga() {
 
 function* loginUserSaga(action) {
 
-  const { email, password } = action.payload;
-
   try {
 
-    yield call([axios, 'post'], '/login', { email, password });
-
-    yield put(loginAction.success());
+    const response = yield call([axios, 'post'], '/login', action.payload);
+    console.log('From login saga ', response);
+    yield put(loginAction.success(response));
 
   }catch(err) {
 
     console.log('Error occured while user loggin-in');
-    //console.error(err);
-    const formError = new SubmissionError({
-      login: 'User with this login or password is not found',
+    console.dir(err);
+
+    let submissionError = {
+      signIn: 'Error occured, duaring login',
       _error: 'Login failed, please check your credentials and try again'
-    });
+    };
+
+    if (typeof err.response === 'object') {
+
+      const { status } = err.response;
+      switch (status) {
+        case 401: {
+          const errorMessage = 'User with this login or password is not found';
+          submissionError = { ...submissionError, ...{ signIn: 'UnauthorizedError', _error: errorMessage } };
+          break;
+        }
+      }
+      
+    }
+
+    const formError = new SubmissionError(submissionError);
 
     yield put(loginAction.failure(formError));
 
@@ -42,8 +56,8 @@ function* signInUserSaga(action) {
 
   try {
 
-    const result = yield call([axios, 'post'], '/sign-in', action.payload);
-    yield put(signInAction.success(result));
+    const response = yield call([axios, 'post'], '/sign-in', action.payload);
+    yield put(signInAction.success(response));
 
   }catch(err) {
 
