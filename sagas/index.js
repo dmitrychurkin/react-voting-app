@@ -1,6 +1,11 @@
 import { all } from 'redux-saga/effects';
 import formActionSaga from 'redux-form-saga';
-import { loginWatcherSaga, signInWatcherSaga } from './app.sagas';
+import { 
+  loginWatcherSaga, 
+  signInWatcherSaga, 
+  logoutWatcherSaga,
+  resentEmailConfirmationTokenWatcherSaga
+} from './app.sagas';
 
 
 export default function* rootSaga() {
@@ -8,7 +13,9 @@ export default function* rootSaga() {
     yield all([
       signInWatcherSaga(),
       loginWatcherSaga(),
-      formActionSaga()
+      formActionSaga(),
+      logoutWatcherSaga(),
+      resentEmailConfirmationTokenWatcherSaga()
     ]);
   } catch (err) {
     console.log('Error occured in rootSaga', err);

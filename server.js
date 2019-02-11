@@ -12,6 +12,7 @@ nextApp.prepare()
     const koaConnect = require('koa-connect');
     const session = require('koa-session');
     const bodyParser = require('koa-bodyparser');
+    const xhr = require('koa-request-xhr');
     const koaValidator = require('koa-async-validator');
     const passport = require('koa-passport');
     const router = require('./routes');
@@ -25,6 +26,7 @@ nextApp.prepare()
           .use(koaConnect(compression))
           .use(session({}, server))
           .use(bodyParser())
+          .use(xhr())
           .use(new CSRF)
           .use(koaValidator())
           .use(passport.initialize())

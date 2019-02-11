@@ -9,8 +9,8 @@ const styles = () => ({
   }
 });
 
-const Login = props => {
-  console.log('Login page props', props);
+const Login = ({ query, classes }) => {
+  
   return (
     <div>
       <Grid
@@ -22,7 +22,7 @@ const Login = props => {
       >
         <Grid 
           item
-          className={props.classes.containerWidth}
+          className={classes.containerWidth}
         >
           <Typography 
             variant="h4" 
@@ -31,7 +31,7 @@ const Login = props => {
           >
             <span className="foo">Login</span>
           </Typography>
-          <LoginContainer />
+          <LoginContainer query={query} />
           <Link as='/forgot' href='/forgot'>
             <a>Forgot password</a>
           </Link>
@@ -51,8 +51,8 @@ const Login = props => {
 };
 
 
-Login.getInitialProps = async (...args) => {
-  console.log('Login.getInitialProps => ', args)
+Login.getInitialProps = async ctx => {
+  return { query: ctx.query };
 };
 
 export default withStyles(styles)(Login);

@@ -1,9 +1,10 @@
 import Router from 'next/router';
 import Layout from '../components/Layout';
+import AccounContainer from '../containers/AccountCountainer';
 
-const Account = props => (
+const Account = () => (
   <Layout>
-    <p>This is the account page</p>
+    <AccounContainer />
   </Layout>
 );
 

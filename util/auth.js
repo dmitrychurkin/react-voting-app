@@ -14,7 +14,9 @@ const randomBytesPromised = promisify(crypto.randomBytes);
  * @param object        User info
  */
 passport.serializeUser((user, done) => {
+
   done(null, user.uuid);
+  
 });
 
 /**
@@ -31,14 +33,13 @@ passport.deserializeUser(async (uuid, done) => {
       { replacements: { uuid }, type: sequelize.QueryTypes.SELECT }
     );
     
+    done(null, user);
+
   } catch (err) {
 
     done(err);
-    return;
 
   }
-
-  done(null, user);
 
 });
 
@@ -121,14 +122,13 @@ passport.use(new RememberMeStrategy(
         }
       );
 
+      done(null, rememberToken);
+
     }catch(err) {
 
       done(err);
-      return;
 
     }
-
-    done(null, token);
 
   }
 ));

@@ -49,8 +49,7 @@ const renderCheckbox = ({ input, label }) => (
   />
 );
 
-const MaterialLoginForm = props => {
-  const { handleSubmit, pristine, submitting, error, valid } = props;
+const MaterialLoginForm = ({ handleSubmit, pristine, submitting, error, valid, reset, query }) => {
   
   const submit = handleSubmit(login);
   return (
@@ -65,8 +64,8 @@ const MaterialLoginForm = props => {
           Router.push('/confirm-email');
           return;
         }
-
-        Router.push('/account');
+        console.log('Login component query ', query);
+        Router.push(query.r || '/account');
         
       }
     }}>

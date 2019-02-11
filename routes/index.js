@@ -42,8 +42,51 @@ koaRouter.get('/sign-in', async ctx => {
 });
 
 koaRouter.get('/login', async ctx => {
+  if (ctx.isAuthenticated()) {
+    return ctx.redirect('back');
+  }
   await app.render(ctx.req, ctx.res, '/login', ctx.query);
   ctx.respond = false;
+});
+
+koaRouter.head('/logout', ctx => {
+
+  if (!ctx.request.xhr) {
+    ctx.status = 400;
+    return;
+  }
+
+  ctx.logout();
+  ctx.status = 200;
+  return;
+
+});
+
+koaRouter.head('/resend-email-confirmation', async ctx => {
+  
+  if (!ctx.request.xhr) {
+    ctx.status = 400;
+    return;
+  }
+
+  const accountConfirmationToken = uuidv5(ctx.origin, uuidv5.URL);
+  const confirmationLink = `${ctx.origin}/confirm-email/${accountConfirmationToken}`;
+  const date = new Date();
+  date.setMinutes(date.getMinutes() + 30);
+  const accountConfirmationTokenExpiresAt = date.getTime();
+
+  // TODO: FINISH HERE see https://www.w3schools.com/sql/sql_and_or.asp
+  /* await sequelize.query(
+    'UPDATE `users` SET remember_token = :rememberToken WHERE uuid = :uuid',
+    { 
+      replacements: { 
+        rememberToken, 
+        uuid: user.uuid
+      }, 
+      type: sequelize.QueryTypes.SELECT 
+    }
+  );*/
+  
 });
 
 koaRouter.get('/confirm-email', async ctx => {
@@ -59,7 +102,7 @@ koaRouter.get('/confirm-email', async ctx => {
 
     const { accountConfirmationToken, accountConfirmationTokenExpiresAt } = ctx.session;
     console.log('session accountConfirmationToken, accountConfirmationTokenExpiresAt', accountConfirmationToken, accountConfirmationTokenExpiresAt);
-    accountConfirmationToken ? 1 : -1;
+    
     if (accountConfirmationToken) {
       ctx.res.customData.confirmEmailStatusCode = accountConfirmationTokenExpiresAt >= Date.now() ? 1 : 2;
       // code 1 - show message about check email
@@ -85,7 +128,7 @@ koaRouter.get('/confirm-email/:token', async ctx => {
 
   if (confirmedUser) {
 
-    if (ctx.isAuthenticated()) {
+    if (confirmedUser.accountConfirmed && ctx.isAuthenticated()) {
       return ctx.redirect('/account');
     }
 
@@ -121,6 +164,10 @@ koaRouter.get('*', async ctx => {
 
 koaRouter.post('/login', async ctx => {
   console.log('Request body => ', ctx.request.body);
+  if (!ctx.request.xhr) {
+    ctx.status = 400;
+    return;
+  }
   return passport.authenticate('local', async (err, user) => {
     if (err) {
       ctx.status = 500;
@@ -168,6 +215,11 @@ koaRouter.post('/login', async ctx => {
 });
 
 koaRouter.post('/sign-in', async ctx => {
+
+  if (!ctx.request.xhr) {
+    ctx.status = 400;
+    return;
+  }
 
   ctx.checkBody('firstName', 'First name can\'t be empty').notEmpty();
   ctx.checkBody('firstName', 'First name must have atleast 3 characters long, please try again.').len(3, 100);

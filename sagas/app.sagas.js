@@ -2,7 +2,13 @@ import { put, call, takeEvery } from 'redux-saga/effects';
 import { SubmissionError } from 'redux-form';
 import axios from 'axios';
 
-import { login as loginAction, signIn as signInAction } from '../actions';
+import { 
+  login as loginAction, 
+  signIn as signInAction,
+  emailConfiramtionState,
+  logout,
+  resendEmailConfirmationToken
+} from '../actions';
 
 export function* loginWatcherSaga() {
   yield takeEvery(loginAction.REQUEST, loginUserSaga);
@@ -12,6 +18,13 @@ export function* signInWatcherSaga() {
   yield takeEvery(signInAction.REQUEST, signInUserSaga);
 }
 
+export function* logoutWatcherSaga() {
+  yield takeEvery(logout.request, logoutSaga);
+}
+
+export function* resentEmailConfirmationTokenWatcherSaga() {
+  yield takeEvery(resendEmailConfirmationToken.request, resentEmailConfirmationTokenSaga);
+}
 
 function* loginUserSaga(action) {
 
@@ -58,6 +71,7 @@ function* signInUserSaga(action) {
 
     const response = yield call([axios, 'post'], '/sign-in', action.payload);
     yield put(signInAction.success(response));
+    yield put(emailConfiramtionState(1));
 
   }catch(err) {
 
@@ -85,4 +99,35 @@ function* signInUserSaga(action) {
     yield put(signInAction.failure(formError));
 
   }
+}
+
+function* logoutSaga() {
+  console.log('RUN logoutSaga');
+  try {
+
+    yield call([axios, 'head'], '/logout');
+    yield put(logout.success(true));
+
+  }catch(err) {
+    console.log('ERROR OCURED logoutSaga ', err);
+    yield put(logout.failure(err.message));
+
+  }
+
+}
+
+function* resentEmailConfirmationTokenSaga() {
+
+  console.log('RUN resentEmailConfirmationTokenSaga');
+  try {
+
+    yield call([axios, 'head'], '/resend-email-confirmation');
+    yield put(emailConfiramtionState(1));
+
+  }catch(err) {
+    console.log('ERROR OCCURED resentEmailConfirmationTokenSaga ', err);
+    yield put(resendEmailConfirmationToken.failure(err.message));
+
+  }
+
 }

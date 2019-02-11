@@ -82,8 +82,6 @@ const MaterialSignInForm = props => {
         if (typeof result !== 'object' || !('_error' in result)) {
           // clear form
           reset();
-          // set email confirmation state
-          setEmailConfiramtionState(1);
           // redirect to confirm-email page
           Router.push('/confirm-email');
         }
