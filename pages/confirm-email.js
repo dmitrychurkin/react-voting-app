@@ -4,9 +4,9 @@ import Button from '@material-ui/core/Button';
 import Router from 'next/router';
 import { resendEmailConfirmationToken, login } from '../actions';
 
-const ConfirmEmail = ({ confirmationCode, userLogged }) => {
+const ConfirmEmail = ({ confirmEmailStatusCode, userLogged }) => {
   
-  switch (confirmationCode) {
+  switch (confirmEmailStatusCode) {
     case 1: 
       return (
         <div>
@@ -57,20 +57,11 @@ ConfirmEmail.getInitialProps = async ctx => {
   }
 
   const { res, isServer, store } = ctx;
-  let confirmationCode, userLogged;
 
-  if (isServer) {
+  const { confirmEmailStatusCode, userLogged } = isServer ? res.customData : store.getState().app; 
+  login.success({ confirmEmailStatusCode, userLogged });
 
-    ({ confirmEmailStatusCode, userLogged } = res.customData); 
-    //login.success(); TODO finish here
-
-  }else {
-
-    confirmEmailStatusCode = store.getState().app.emailConfirmationState;
-
-  }
-
-  return { confirmationCode, userLogged: userLogged || store.getState().app.userLogged };
+  return { confirmEmailStatusCode, userLogged };
 
 };
 

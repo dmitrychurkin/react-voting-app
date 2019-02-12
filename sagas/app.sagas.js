@@ -25,6 +25,7 @@ export function* logoutWatcherSaga() {
 }
 
 export function* resentEmailConfirmationTokenWatcherSaga() {
+  // TODO: fix error here
   yield takeEvery(resendEmailConfirmationToken.REQUEST, resentEmailConfirmationTokenSaga);
 }
 
@@ -34,7 +35,7 @@ function* loginUserSaga(action) {
 
     const response = yield call([axios, 'post'], '/login', action.payload);
     console.log('From login saga ', response);
-    yield put(loginAction.success(response));
+    yield put(loginAction.success(response.data));
 
   }catch(err) {
 
@@ -72,7 +73,8 @@ function* signInUserSaga(action) {
   try {
 
     const response = yield call([axios, 'post'], '/sign-in', action.payload);
-    yield put(signInAction.success(response));
+    console.log('From signin saga ', response);
+    yield put(signInAction.success());
     yield put(emailConfiramtionState(1));
 
   }catch(err) {

@@ -1,15 +1,15 @@
 import { createAction, createActions } from 'redux-actions';
 import { createFormAction } from 'redux-form-saga';
 
-const login = createFormAction('LOGIN');
+export const login = createFormAction('LOGIN');
 
-const signIn = createFormAction('SIGN-IN');
+export const signIn = createFormAction('SIGN-IN');
 
-const emailConfiramtionState = createAction('EMAIL_CONFIRMATION_STATE');
+export const emailConfiramtionState = createAction('EMAIL_CONFIRMATION_STATE');
 
-const setCsrf = createAction('SET_CSRF');
+export const setCsrf = createAction('SET_CSRF');
 
-const logout = createActions({
+export const logout = createActions({
   'LOGOUT': {
     'REQUEST': undefined,
     'SUCCESS': undefined,
@@ -18,12 +18,12 @@ const logout = createActions({
 });
 logout.REQUEST = 'LOGOUT/REQUEST';
 
-const resendEmailConfirmationToken = createActions({
+export const resendEmailConfirmationToken = createActions({
   'RESEND_EMAIL_CONFIRMATION_TOKEN': {
     'REQUEST': undefined,
     'FAILURE': undefined
   }
 });
 resendEmailConfirmationToken.REQUEST = 'RESEND_EMAIL_CONFIRMATION_TOKEN/REQUEST';
+console.log(resendEmailConfirmationToken.resendEmailConfirmationToken.request);
 
-export { login, signIn, emailConfiramtionState, setCsrf, logout, resendEmailConfirmationToken };
