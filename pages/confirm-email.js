@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import Error from 'next/error'
 import Button from '@material-ui/core/Button';
+import Router from 'next/router';
+import { resendEmailConfirmationToken, login } from '../actions';
 
-const ConfirmEmail = props => {
-  console.log('ConfirmEmail props => ', props);
-  switch (props.confirmationCode) {
+const ConfirmEmail = ({ confirmationCode, userLogged }) => {
+  
+  switch (confirmationCode) {
     case 1: 
       return (
         <div>
@@ -15,9 +17,20 @@ const ConfirmEmail = props => {
       return (
         <div>
           Confirmation token expired, click 
-          <Button variant="outlined" color="primary">
+          &nbsp; &nbsp;
+          <Button 
+            onClick={() => {
+              if (!userLogged) {
+                const token = Router.pathname.split('/').slice(-1)[0];
+                resendEmailConfirmationToken.request(token);
+              }
+            }} 
+            variant="outlined" 
+            color="primary"
+          >
             here
           </Button>
+          &nbsp; &nbsp;
           to resend again
         </div>
       );
@@ -25,7 +38,7 @@ const ConfirmEmail = props => {
       return (
         <div>
           Account confirmation done successfully,  
-          <Link href="account">
+          <Link href="/account">
             <a>go to Your account</a>
           </Link>
         </div>
@@ -44,10 +57,20 @@ ConfirmEmail.getInitialProps = async ctx => {
   }
 
   const { res, isServer, store } = ctx;
+  let confirmationCode, userLogged;
 
-  const confirmationCode =  isServer ? res.customData.confirmEmailStatusCode : store.getState().app.emailConfirmationState;
-  
-  return { confirmationCode };
+  if (isServer) {
+
+    ({ confirmEmailStatusCode, userLogged } = res.customData); 
+    //login.success(); TODO finish here
+
+  }else {
+
+    confirmEmailStatusCode = store.getState().app.emailConfirmationState;
+
+  }
+
+  return { confirmationCode, userLogged: userLogged || store.getState().app.userLogged };
 
 };
 

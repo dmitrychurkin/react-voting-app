@@ -60,7 +60,7 @@ const MaterialLoginForm = ({ handleSubmit, pristine, submitting, error, valid, r
       if (typeof result !== 'object' || !('_error' in result)) {
         // clear form
         reset();
-        if (result.emailConfirmationState != 3) {
+        if (result.data.emailConfirmationState != 3) {
           Router.push('/confirm-email');
           return;
         }

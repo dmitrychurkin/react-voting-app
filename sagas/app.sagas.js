@@ -10,6 +10,8 @@ import {
   resendEmailConfirmationToken
 } from '../actions';
 
+axios.defaults.headers.post['X-Requested-With'] = 'XMLHttpRequest';
+
 export function* loginWatcherSaga() {
   yield takeEvery(loginAction.REQUEST, loginUserSaga);
 }
@@ -19,11 +21,11 @@ export function* signInWatcherSaga() {
 }
 
 export function* logoutWatcherSaga() {
-  yield takeEvery(logout.request, logoutSaga);
+  yield takeEvery(logout.REQUEST, logoutSaga);
 }
 
 export function* resentEmailConfirmationTokenWatcherSaga() {
-  yield takeEvery(resendEmailConfirmationToken.request, resentEmailConfirmationTokenSaga);
+  yield takeEvery(resendEmailConfirmationToken.REQUEST, resentEmailConfirmationTokenSaga);
 }
 
 function* loginUserSaga(action) {
@@ -116,12 +118,12 @@ function* logoutSaga() {
 
 }
 
-function* resentEmailConfirmationTokenSaga() {
+function* resentEmailConfirmationTokenSaga(action) {
 
   console.log('RUN resentEmailConfirmationTokenSaga');
   try {
 
-    yield call([axios, 'head'], '/resend-email-confirmation');
+    yield call([axios, 'head'], `/resend-email-confirmation/${action.payload}`);
     yield put(emailConfiramtionState(1));
 
   }catch(err) {

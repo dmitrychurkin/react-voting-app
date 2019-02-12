@@ -118,7 +118,7 @@ passport.use(new RememberMeStrategy(
             rememberToken, 
             uuid: user.uuid
           }, 
-          type: sequelize.QueryTypes.SELECT 
+          type: sequelize.QueryTypes.UPDATE 
         }
       );
 

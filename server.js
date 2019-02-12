@@ -1,10 +1,11 @@
 const { app: nextApp } = require('./next.app');
+const { SESSION_SECRET, SESSION_KEYS } = require('./config');
 
 nextApp.prepare()
   .then(() => {
     const Koa = require('koa');
     const server = new Koa;
-    server.keys = ['never will guess'];
+    server.keys = SESSION_KEYS;
     require('koa-qs')(server);
 
     const logger = require('koa-logger');
@@ -15,9 +16,10 @@ nextApp.prepare()
     const xhr = require('koa-request-xhr');
     const koaValidator = require('koa-async-validator');
     const passport = require('koa-passport');
+    const CSRF = require('koa-csrf');
     const router = require('./routes');
     const db = require('./models');
-    const CSRF = require('koa-csrf');
+
     // authentication
     require('./util/auth');
 
@@ -27,6 +29,17 @@ nextApp.prepare()
           .use(session({}, server))
           .use(bodyParser())
           .use(xhr())
+          .use(async (ctx, next) => {
+
+            if (!ctx.session.secret) {
+              ctx.session.secret = SESSION_SECRET;
+            }
+
+            if (ctx.method === 'POST') {
+              console.log('LOGGGING TOKEN CSRF ', ctx.request.body._csrf);
+            }
+            await next();
+          })
           .use(new CSRF)
           .use(koaValidator())
           .use(passport.initialize())
@@ -56,7 +69,14 @@ nextApp.prepare()
         }
         console.log(`> Ready on http://localhost:${PORT}`);
       });
-    })
+    });
+
+    server.on('error', (err, ctx) => {
+      if (!err.name.includes('ERR_HTTP_HEADERS_SENT')) {
+        console.error(err);
+      }
+    });
+
   })
   .catch(e => {
     console.error(e.stack);
